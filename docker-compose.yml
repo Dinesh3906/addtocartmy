@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: addtocart-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./addtocart_backend
+      dockerfile: Dockerfile
+    container_name: addtocart-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ENABLE_MOCK_MODE=true
+    depends_on:
+      - redis
+    volumes:
+      - ./addtocart_backend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+volumes:
+  redis_data:
